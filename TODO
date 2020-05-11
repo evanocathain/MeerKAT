@@ -1,2 +1,6 @@
+Rise/Set
 Make sure that riseset matches _exactly_ Parkes coord. At the moment
 it is off by a little bit. Not important for my current purposes.
+
+Sensitivity
+Need to add in S band
