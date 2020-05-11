@@ -27,7 +27,7 @@ def get_aeff(telescope,plot):
         As    = 0.98     # unitless constant
 
     elif telescope == "MeerKAT":
-        D     = 13.5    # dish diameter in metres
+        D     = 14.0    # dish diameter in metres
         etaF  = lambda freqGHz: 0.80 - 0.04*np.abs(np.log10(freqGHz)) # feed illumination
         epsp = 480.0e-6 # rms surface error in metres for the primary reflector surface
         epss = 265.0e-6 # rms surface error in metres for the primary reflector surface
