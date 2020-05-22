@@ -1,3 +1,4 @@
+
 #!/usr/local/bin/python3
 
 #
@@ -28,7 +29,7 @@ nfreqs = 2000      # number of points at which to sample frequency for output pl
 
 # Parse command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('-radius', type=float, dest='radius', help='choose distance from the array centre, in km, for chosen sub-array (default: entire array)', default=150.0)
+parser.add_argument('-radius', type=float, dest='radius', help='choose distance from the array centre, in km, for chosen sub-array (default: entire array, 4.2km)', default=4.2)
 parser.add_argument('-glgb', nargs=2, type=float, dest='coord', help='enter specific Galactic coordinates to use (default: gl=180.0, gb=-90.0) NOT DONE YET', default=[180.0,-90.0])
 parser.add_argument('-gallos', dest='gal', help='choose either 10th, 50th or 90th percentile value for the galaxy contribution to the sky temperature (low/medium/high, default: low)', default='low')
 parser.add_argument('-pwv', dest='pwv', help='choose either 5mm, 10mm or 20mm for the PWV value for choosing (a) the zenith opacity, and (b) the atmospheric temperature contribution to the sky temperature (low/medium/high, default: low)', default="low")
@@ -97,49 +98,57 @@ plt.title("Gain - entire MeerKAT array")
 plt.ylabel("Aeff/Tsys (m^2/K)")
 plt.xlabel("Frequency (GHz)")
 
-# Sanity check
-#roberts_freq = np.genfromtxt("roberts_numbers_mid",usecols=0)
-#roberts_gain = np.genfromtxt("roberts_numbers_mid",usecols=2)
-#plt.loglog(roberts_freq,roberts_gain,label='Robert numbers')
-#plt.legend()
-
 plt.show()
 
-#Nska = 133
 Nmk  = 64
-if ((radius < 150.0) or (nelements < 64)):
+if ((radius < 4.2) or (nelements < 64)):
 
-    # Read in the array configuration
+    # Read in the full 64-dish array configuration
     array = np.genfromtxt("./Configuration/MK_dist_metres.txt",dtype=[('name','S6'),('xm','f8'),('ym','f8')],skip_header=0,usecols=(1,2,3)) # NB this is an array of tuples, not a 2-D array, due to carrying the name label for each dish
     dist = np.zeros(np.size(array))    # work out the distance from centre in km
     for i in range(0,np.size(array)):
         dist[i] = 0.001*np.sqrt(array[i][1]*array[i][1]+array[i][2]*array[i][2])
+    # Sort by distance from array centre
     array = array[np.argsort(dist)]
     dist = dist[np.argsort(dist)]
-    # Choose the sub-array of interest
-    if (radius < 150.0): # if radius specified re-work out nelements, i.e. radius flag over-rules nelements flag if both set
-        subarray = array[np.where( dist < radius)]
-        subdist = dist[np.where( dist < radius)]
-        nelements = subarray.shape[0]
-    Nmk = 0
-    for i in range(0,nelements):
-        if subarray[i][0][0] == 'M':
-            Nmk +=1
-    print ("Considering a radius of %.1f"%(subdist[nelements-1]))
-    print ("Considering %d MeerKAT dishes"%(Nmk))
+    print(dist)
+    # Choose the sub-array of interest, first using the nelements flag
+    # Implicitly assumed that the innermost nelements are wanted
+    subarray = array[0:nelements]
+    subdist  = dist[0:nelements]
+    if (radius < 4.2):
+        # if radius is also specified re-work out nelements, 
+        # i.e. if both set the smaller sub-array is taken
+        # if radius > subdist[nelements-1]    --> DO NOTHING
+        if (radius < subdist[nelements-1]): # --> Determine a smaller nelements
+            subarray = array[np.where( dist < radius)]
+            subdist = dist[np.where( dist < radius)]
+            nelements = subarray.shape[0]
+#    Nmk = 0
+#    for i in range(0,nelements):
+#        if subarray[i][0][0] == 'M':
+#            Nmk +=1
+    print ("Considering a radius of %.1f km"%(subdist[nelements-1]))
+    if nelements % 4 != 0: # CBF constraint, can add 64, 60, 56, ... dishes
+        print ("%d %d %d"%(nelements, (nelements/4), (nelements%4)))
+        print ("There are %d dishes within that radius."%(nelements)) 
+        nelements = (nelements//4)*4
+        print ("But Beamformer adds in fours so will only use %d dishes."%(nelements))
+    print ("Considering %d MeerKAT dishes"%(nelements))
     plt.grid(True)
-    plt.loglog(f,Nmk*(Aeff_MK(f)/Tsys_MK(f)))
-    plt.title("Gain - subarray radius %.1f km - %d MeerKAT dishes"%(radius,Nmk))
+    plt.loglog(f,nelements*(Aeff_MK(f)/Tsys_MK(f)))
+    plt.title("Gain - subarray radius %.1f km - %d MeerKAT dishes"%(radius,nelements))
     plt.ylabel("Aeff/Tsys (m^2/K)")
     plt.xlabel("Frequency (GHz)")
     plt.show()
     plt.grid(True)
-    plt.loglog(f,Nmk*(Aeff_MK(f)/(2*kB)))
-    plt.title("Gain - subarray radius %.1f km - %d MeerKAT"%(radius,Nmk))
+    plt.loglog(f,nelements*(Aeff_MK(f)/(2*kB)))
+    plt.title("Gain - subarray radius %.1f km - %d MeerKAT"%(radius,nelements))
     plt.ylabel("Aeff/(2*kB) (K/Jy)")
     plt.xlabel("Frequency (GHz)")
     plt.show()
 
+# Prints out sensitivity as a function of frequency
 for i in range (0,f.size):
     print (f[i], Nmk*(Aeff_MK(f[i])/Tsys_MK(f[i])))
 
