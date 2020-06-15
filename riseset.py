@@ -1,20 +1,20 @@
 
 #!/usr/bin/python
 
-import sys 
+import sys
 from datetime import *
 import ephem
 
 if len(sys.argv)!=4:
-    print "Usage: riseset site ra dec"
-    print ' '
-    print "This program returns the rise and set LSTs for the provided RA and DEC at the requested site"
-    print "e.g. riseset mk 12:34:56 -43:21:00"
-    print "Site = MeerKAT"
-    print "Long,Lat = 21:24:40.0 -30:43:16.0"
-    print "Target Coordinates = 12:34:56.00 -43:21:00.0"
-    print "Rise Time (LST) = 6:01:30.97"
-    print "Set Time (LST)  = 19:10:28.11"
+    print ("Usage: riseset site ra dec")
+    print (' ')
+    print ("This program returns the rise and set LSTs for the provided RA and DEC at the requested site")
+    print ("e.g. riseset mk 12:34:56 -43:21:00")
+    print ("Site = MeerKAT")
+    print ("Long,Lat = 21:24:40.0 -30:43:16.0")
+    print ("Target Coordinates = 12:34:56.00 -43:21:00.0")
+    print ("Rise Time (LST) = 6:01:30.97")
+    print ("Set Time (LST)  = 19:10:28.11")
     sys.exit(0)
 
 place=sys.argv[1]
@@ -91,8 +91,8 @@ elif (place=="mk" or place=="MK" or place=="meerkat" or place=="MeerKAT"):
     site.elevation = 0
     site.horizon='15.0' # Took this from SKA1 Level 0 Science Requirements. I guess it is this or better.
     place = "MeerKAT"
-else: 
-    print "Which telescope?! Try again!"
+else:
+    print ("Which telescope?! Try again!")
     sys.exit(0)
 
 target      = ephem.FixedBody()
@@ -103,14 +103,14 @@ target._dec = ephem.degrees(dec)
 target.compute(site)
 
 site.date=datetime.utcnow()
-print "Site =",place
-print "Long,Lat =",site.long,site.lat
+print ("Site =",place)
+print ("Long,Lat =",site.long,site.lat)
 #print "Current LST at Site =",site.sidereal_time()
-print "Target Coordinates =", target._ra, target._dec
+print ("Target Coordinates =", target._ra, target._dec)
 site.date = site.next_rising(target)
-print "Rise Time (LST) =", site.sidereal_time()
+print ("Rise Time (LST) =", site.sidereal_time())
 site.date = site.next_setting(target)
-print "Set Time (LST) =", site.sidereal_time()
+print ("Set Time (LST) =", site.sidereal_time())
 #site.next_rising(target))
 #print "Set Time =",site.sidereal_time(site.next_setting(target))
 #print "UTC =",site.date
@@ -119,4 +119,3 @@ print "Set Time (LST) =", site.sidereal_time()
 ## see Table in en.wikipedia.org/wiki/Julian_day for more info
 
 sys.exit(0)
-
